@@ -3,9 +3,13 @@ import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
+import 'express-async-errors';
 import { config } from './config';
 import { setupWebSocket } from './websocket';
 import aiRoutes from './routes/ai';
+import aiEnhancedRoutes from './routes/ai-enhanced';
+import authRoutes from './routes/auth';
 import { executionRouter } from './routes/execution';
 import projectsRoutes from './routes/projects';
 
@@ -15,6 +19,7 @@ const httpServer = createServer(app);
 
 // Middleware
 app.use(helmet());
+app.use(compression());
 app.use(cors({
   origin: config.server.corsOrigin,
   credentials: true,
@@ -33,7 +38,9 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/ai-enhanced', aiEnhancedRoutes);
 app.use('/api/execute', executionRouter);
 app.use('/api/projects', projectsRoutes);
 
@@ -63,12 +70,19 @@ const io = setupWebSocket(httpServer);
 // Start server
 httpServer.listen(config.server.port, config.server.host, () => {
   console.log('');
-  console.log('🚀 AI Dev Platform Backend');
+  console.log('🚀 AI Dev Platform Backend v2.0');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`Environment:  ${config.server.env}`);
   console.log(`HTTP Server:  http://${config.server.host}:${config.server.port}`);
   console.log(`WebSocket:    ws://${config.server.host}:${config.server.port}`);
   console.log(`CORS Origin:  ${config.server.corsOrigin}`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📦 Features:');
+  console.log('  ✅ Authentication (JWT)');
+  console.log('  ✅ Database (Prisma + PostgreSQL)');
+  console.log('  ✅ Enhanced AI (6 new capabilities)');
+  console.log('  ✅ Testing (Vitest)');
+  console.log('  ✅ CI/CD (GitHub Actions)');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');
 });

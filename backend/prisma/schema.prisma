@@ -1,0 +1,161 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  username      String    @unique
+  displayName   String?
+  avatar        String?
+  passwordHash  String
+  apiKeys       ApiKey[]
+  projects      Project[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([email])
+  @@index([username])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
+
+model ApiKey {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   String   // 'openai', 'anthropic', etc.
+  keyHash    String   // Encrypted API key
+  isActive   Boolean  @default(true)
+  lastUsedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@index([provider])
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  template    String        // ProjectTemplate enum
+  userId      String?
+  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  files       ProjectFile[]
+  versions    Version[]
+  isPublic    Boolean       @default(false)
+  tags        String[]
+  viewCount   Int           @default(0)
+  forkCount   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([isPublic])
+  @@index([createdAt])
+}
+
+model ProjectFile {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  path      String
+  type      String   // 'file' | 'directory'
+  content   String?  @db.Text
+  language  String?
+  size      Int?
+  parentId  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([parentId])
+}
+
+model Version {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versionNum  Int
+  message     String
+  snapshot    Json     // Full project snapshot
+  changes     Json?    // Diff from previous version
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  @@index([projectId])
+  @@index([createdAt])
+}
+
+model AIGeneration {
+  id          String   @id @default(uuid())
+  provider    String
+  prompt      String   @db.Text
+  response    String   @db.Text
+  model       String?
+  tokensUsed  Int?
+  duration    Int?     // milliseconds
+  userId      String?
+  projectId   String?
+  success     Boolean  @default(true)
+  error       String?  @db.Text
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([provider])
+  @@index([createdAt])
+}
+
+model Execution {
+  id          String   @id @default(uuid())
+  projectId   String?
+  language    String
+  code        String   @db.Text
+  output      String?  @db.Text
+  error       String?  @db.Text
+  status      String   // ExecutionStatus enum
+  exitCode    Int?
+  duration    Int?     // milliseconds
+  userId      String?
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([projectId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Analytics {
+  id         String   @id @default(uuid())
+  eventType  String   // 'page_view', 'ai_generation', 'code_execution', etc.
+  userId     String?
+  projectId  String?
+  metadata   Json?
+  timestamp  DateTime @default(now())
+
+  @@index([eventType])
+  @@index([userId])
+  @@index([timestamp])
+}
