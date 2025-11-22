@@ -10,6 +10,8 @@ import { setupWebSocket } from './websocket';
 import aiRoutes from './routes/ai';
 import aiEnhancedRoutes from './routes/ai-enhanced';
 import authRoutes from './routes/auth';
+import visionRoutes from './routes/vision';
+import achievementsRoutes from './routes/achievements';
 import { executionRouter } from './routes/execution';
 import projectsRoutes from './routes/projects';
 
@@ -41,6 +43,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai-enhanced', aiEnhancedRoutes);
+app.use('/api/vision', visionRoutes);
+app.use('/api/gamification', achievementsRoutes);
 app.use('/api/execute', executionRouter);
 app.use('/api/projects', projectsRoutes);
 
@@ -81,6 +85,8 @@ httpServer.listen(config.server.port, config.server.host, () => {
   console.log('  ✅ Authentication (JWT)');
   console.log('  ✅ Database (Prisma + PostgreSQL)');
   console.log('  ✅ Enhanced AI (6 new capabilities)');
+  console.log('  ✅ Screenshot to Code (AI Vision)');
+  console.log('  ✅ Achievements & Gamification');
   console.log('  ✅ Testing (Vitest)');
   console.log('  ✅ CI/CD (GitHub Actions)');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
